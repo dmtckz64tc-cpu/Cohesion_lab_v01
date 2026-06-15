@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cohérences Multi-Échelles</title>
+
+<style>
+body{
+    font-family:-apple-system,BlinkMacSystemFont,sans-serif;
+    background:#0f172a;
+    color:white;
+    margin:0;
+    padding:20px;
+}
+
+h1{
+    text-align:center;
+    color:#7dd3fc;
+}
+
+.card{
+    background:#1e293b;
+    border-radius:15px;
+    padding:15px;
+    margin-bottom:20px;
+}
+
+.controls{
+    display:grid;
+    grid-template-columns:1fr;
+    gap:15px;
+}
+
+label{
+    display:block;
+    margin-bottom:5px;
+}
+
+.value{
+    color:#7dd3fc;
+    font-weight:bold;
+}
+
+canvas{
+    background:white;
+    border-radius:10px;
+    max-width:100%;
+}
+
+.result{
+    font-size:1.3em;
+    text-align:center;
+    padding:10px;
+}
+
+.badge{
+    display:inline-block;
+    padding:8px 15px;
+    border-radius:20px;
+    font-weight:bold;
+}
+
+.simple{
+    background:#16a34a;
+}
+
+.medium{
+    background:#eab308;
+    color:black;
+}
+
+.complex{
+    background:#dc2626;
+}
+
+details{
+    margin-top:15px;
+}
+
+footer{
+    text-align:center;
+    opacity:0.7;
+    margin-top:30px;
+}
+</style>
+</head>
+
+<body>
+
+<h1>📌 Cohérences Multi-Échelles</h1>
+
+<div class="card">
+<p>
+Les objets ne sont pas fondamentaux.
+Ils émergent lorsque plusieurs descriptions
+restent cohérentes malgré les changements d'échelle.
+</p>
+</div>
+
+<div class="card controls">
+
+<div>
+<label>Bruit :
+<span id="noiseValue" class="value">0.10</span>
+</label>
+<input id="noise" type="range" min="0" max="1" step="0.01" value="0.10">
+</div>
+
+<div>
+<label>Nombre d'échelles :
+<span id="levelsValue" class="value">4</span>
+</label>
+<input id="levels" type="range" min="2" max="8" step="1" value="4">
+</div>
+
+<div>
+<label>Force du coarse-graining :
+<span id="cgValue" class="value">2</span>
+</label>
+<input id="cg" type="range" min="2" max="4" step="1" value="2">
+</div>
+
+</div>
+
+<div class="card">
+<h3>Signal</h3>
+<canvas id="signalCanvas" width="700" height="220"></canvas>
+</div>
+
+<div class="card">
+<h3>Matrice de cohérence T</h3>
+<canvas id="heatmapCanvas" width="500" height="500"></canvas>
+</div>
+
+<div class="card result">
+<div id="neff"></div>
+<div id="interpretation"></div>
+</div>
+
+<div class="card">
+<details>
+<summary>🔬 Détails mathématiques</summary>
+
+<p>
+L₀ = signal initial
+</p>
+
+<p>
+Lᵢ₊₁ = CoarseGrain(Lᵢ)
+</p>
+
+<p>
+Tᵢⱼ = corr(Lᵢ, Lⱼ)
+</p>
+
+<p>
+N_eff = nombre de valeurs propres significatives de T
+</p>
+</details>
+</div>
+
+<footer>
+Modèle exploratoire : Cohérences Multi-Échelles
+</footer>
+
+<script>
+
+const noiseSlider = document.getElementById("noise");
+const levelsSlider = document.getElementById("levels");
+const cgSlider = document.getElementById("cg");
+
+const signalCanvas = document.getElementById("signalCanvas");
+const signalCtx = signalCanvas.getContext("2d");
+
+const heatCanvas = document.getElementById("heatmapCanvas");
+const heatCtx = heatCanvas.getContext("2d");
+
+function randomNormal() {
+    let u = Math.random();
+    let v = Math.random();
+    return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);
+}
+
+function buildSignal(noise){
+
+    let s=[];
+
+    for(let i=0;i<128;i++){
+
+        let t=i/128*2*Math.PI;
+
+        let value =
+            Math.sin(t)
+            +0.5*Math.sin(3*t)
+            +0.25*Math.sin(7*t)
+            +noise*randomNormal();
+
+        s.push(value);
+    }
+
+    return s;
+}
+
+function coarseGrain(signal,factor){
+
+    let out=[];
+
+    for(let i=0;i<signal.length;i+=factor){
+
+        let block=signal.slice(i,i+factor);
+
+        let avg=
+            block.reduce((a,b)=>a+b,0)
+            /block.length;
+
+        out.push(avg);
+    }
+
+    return out;
+}
+
+function corr(a,b){
+
+    let n=Math.min(a.length,b.length);
+
+    a=a.slice(0,n);
+    b=b.slice(0,n);
+
+    let ma=a.reduce((x,y)=>x+y,0)/n;
+    let mb=b.reduce((x,y)=>x+y,0)/n;
+
+    let num=0;
+    let da=0;
+    let db=0;
+
+    for(let i=0;i<n;i++){
+
+        let xa=a[i]-ma;
+        let xb=b[i]-mb;
+
+        num+=xa*xb;
+        da+=xa*xa;
+        db+=xb*xb;
+    }
+
+    return num/(Math.sqrt(da*db)+1e-12);
+}
+
+function buildLevels(signal,nLevels,factor){
+
+    let levels=[signal];
+
+    let current=signal;
+
+    for(let i=1;i<nLevels;i++){
+
+        current=coarseGrain(current,factor);
+
+        if(current.length<4) break;
+
+        levels.push(current);
+    }
+
+    return levels;
+}
+
+function buildT(levels){
+
+    let n=levels.length;
+
+    let T=[];
+
+    for(let i=0;i<n;i++){
+
+        let row=[];
+
+        for(let j=0;j<n;j++){
+
+            row.push(
+                corr(levels[i],levels[j])
+            );
+        }
+
+        T.push(row);
+    }
+
+    return T;
+}
+
+function estimateNeff(T){
+
+    let n=T.length;
+
+    let score=0;
+
+    for(let i=0;i<n;i++){
+
+        let local=0;
+
+        for(let j=0;j<n;j++){
+
+            local+=Math.abs(T[i][j]);
+        }
+
+        if(local/n>0.45){
+            score++;
+        }
+    }
+
+    return score;
+}
+
+function drawSignal(signal){
+
+    signalCtx.clearRect(
+        0,0,
+        signalCanvas.width,
+        signalCanvas.height
+    );
+
+    signalCtx.strokeStyle="#2563eb";
+    signalCtx.lineWidth=2;
+
+    signalCtx.beginPath();
+
+    for(let i=0;i<signal.length;i++){
+
+        let x=i/(signal.length-1)
+        *signalCanvas.width;
+
+        let y=
+        signalCanvas.height/2
+        -signal[i]*60;
+
+        if(i===0)
+            signalCtx.moveTo(x,y);
+        else
+            signalCtx.lineTo(x,y);
+    }
+
+    signalCtx.stroke();
+}
+
+function colorFor(v){
+
+    let r,g,b;
+
+    if(v>=0){
+
+        r=Math.floor(255*(1-v));
+        g=255;
+        b=Math.floor(120*(1-v));
+
+    }else{
+
+        v=Math.abs(v);
+
+        r=80;
+        g=Math.floor(180*(1-v));
+        b=255;
+    }
+
+    return `rgb(${r},${g},${b})`;
+}
+
+function drawHeatmap(T){
+
+    let n=T.length;
+
+    let size=
+        heatCanvas.width/n;
+
+    for(let i=0;i<n;i++){
+
+        for(let j=0;j<n;j++){
+
+            heatCtx.fillStyle=
+                colorFor(T[i][j]);
+
+            heatCtx.fillRect(
+                j*size,
+                i*size,
+                size,
+                size
+            );
+
+            heatCtx.strokeStyle="black";
+            heatCtx.strokeRect(
+                j*size,
+                i*size,
+                size,
+                size
+            );
+        }
+    }
+}
+
+function update(){
+
+    const noise=
+    parseFloat(noiseSlider.value);
+
+    const nLevels=
+    parseInt(levelsSlider.value);
+
+    const factor=
+    parseInt(cgSlider.value);
+
+    noiseValue.textContent=noise.toFixed(2);
+    levelsValue.textContent=nLevels;
+    cgValue.textContent=factor;
+
+    let signal=
+    buildSignal(noise);
+
+    let levels=
+    buildLevels(signal,nLevels,factor);
+
+    let T=
+    buildT(levels);
+
+    let Neff=
+    estimateNeff(T);
+
+    drawSignal(signal);
+    drawHeatmap(T);
+
+    document.getElementById("neff")
+    .innerHTML=
+    "<strong>N_eff = "
+    +Neff+
+    "</strong>";
+
+    let txt="";
+    let css="";
+
+    if(Neff<=2){
+
+        txt="Système simple";
+        css="simple";
+
+    }else if(Neff<=4){
+
+        txt="Système structuré";
+        css="medium";
+
+    }else{
+
+        txt="Système complexe multi-échelle";
+        css="complex";
+    }
+
+    document.getElementById(
+        "interpretation"
+    ).innerHTML=
+    `<span class="badge ${css}">
+    ${txt}
+    </span>`;
+}
+
+noiseSlider.oninput=update;
+levelsSlider.oninput=update;
+cgSlider.oninput=update;
+
+update();
+
+</script>
+
+</body>
+</html>
