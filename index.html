@@ -102,7 +102,7 @@ button { padding: 8px 12px; }
 
 window.onerror = (msg, src, line) => {
 
-  alert(Erreur: ${msg} @${line});
+alert(`Erreur: ${msg} @${line}`);
 
 };
 
@@ -180,7 +180,7 @@ function randn(){
 
   let v = Math.random();
 
-  return Math.sqrt(-2Math.log(u)) * Math.cos(2Math.PIv);
+  return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
 
 }
 
@@ -214,19 +214,7 @@ function buildSignal(){
 
   
 
-    if(i > trans) y += 0.8Math.sin(6t);
-
-    y += noise * randn();
-
-  
-
-    arr.push(y);
-
-  }
-
-  
-
-  return arr;
+    if (i > trans) y += 0.8 * Math.sin(6 * t);
 
 }
 
@@ -294,7 +282,7 @@ function corr(a,b){
 
   
 
-  return num / Math.sqrt((da||1)(db||1));
+  return num / Math.sqrt((da || 1) * (db || 1));
 
 }
 
@@ -418,9 +406,8 @@ function drawHeat(T){
 
   
 
-      ctx.fillStyle = rgb(${g},${g},${g});
-
-      ctx.fillRect(js, is, s, s);
+      ctx.fillStyle = `rgb(${g},${g},${g})`;
+      ctx.fillRect(j * s, i * s, s, s);
 
     }
 
@@ -474,7 +461,7 @@ function computeDeformation(signal){
 
         let d = Ts[k+1][i][j] - Ts[k][i][j];
 
-        sum += dd;
+        sum += d*d;
 
       }
 
@@ -572,9 +559,9 @@ function drawDeform(signal){
 
   
 
-    let H = -p.reduce((s,v)=> s + (v>0 ? vMath.log(v):0), 0);
-
-    let Neff = (sumsum) / eig.reduce((a,b)=>a+bb,0);
+    let H = -p.reduce((s, v) => s + (v > 0 ? v * Math.log(v) : 0), 0);
+    
+    let Neff = 1 / eig.reduce((a, b) => a + b, 0);
 
   
 
@@ -651,8 +638,8 @@ function drawDeform(signal){
   
 
   document.getElementById("info").innerHTML =
-
-    Déformation moyenne: ${avgD.toFixed(3)} | Pics: ${peaks};
+  `Déformation moyenne: ${avgD.toFixed(3)} | Pics: ${peaks}`;
+  
 
   
 
