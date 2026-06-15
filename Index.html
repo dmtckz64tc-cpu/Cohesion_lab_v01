@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+
+<html lang="fr">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Coherence Lab V1 - Debug iOS</title>
+
+  
+
+<style>
+
+body {
+
+  font-family: Arial, sans-serif;
+
+  margin: 20px;
+
+  background: #111;
+
+  color: #eee;
+
+}
+
+.panel { margin-bottom: 15px; }
+
+label { display: block; margin: 6px 0; }
+
+canvas {
+
+  background: #fff;
+
+  border: 1px solid #444;
+
+  max-width: 100%;
+
+  display: block;
+
+  margin: 10px 0;
+
+}
+
+button { padding: 8px 12px; }
+
+</style>
+
+</head>
+
+  
+
+<body>
+
+  
+
+<h1>Cohérence Multi‑Échelle Lab</h1>
+
+  
+
+<div class="panel">
+
+<label>Bruit <input id="noise" type="range" min="0" max="1" step="0.05" value="0.2"></label>
+
+<label>Transition <input id="transition" type="range" min="32" max="224" step="1" value="128"></label>
+
+<button id="toggle">Masquer / Afficher le signal</button>
+
+</div>
+
+  
+
+<canvas id="signal" width="700" height="180"></canvas>
+
+<canvas id="heatmap" width="300" height="300"></canvas>
+
+<canvas id="deform" width="700" height="180"></canvas>
+
+  
+
+<div id="info">
+
+  <div id="intuition"></div>
+
+  <div id="metrics"></div>
+
+</div>
+
+  
+
+<script>
+
+  
+
+// ============================
+
+// Debug global (Safari friendly)
+
+// ============================
+
+window.onerror = (msg, src, line) => {
+
+  alert(Erreur: ${msg} @${line});
+
+};
+
+  
+
+// ============================
+
+// Canvas + DPI fix (iOS important)
+
+// ============================
+
+function setupCanvas(canvas) {
+
+  const dpr = window.devicePixelRatio || 1;
+
+  const rect = canvas.getBoundingClientRect();
+
+  
+
+  canvas.width  = rect.width * dpr;
+
+  canvas.height = rect.height * dpr;
+
+  
+
+  const ctx = canvas.getContext("2d");
+
+  ctx.scale(dpr, dpr);
+
+  
+
+  return ctx;
+
+}
+
+  
+
+const signalCanvas = document.getElementById("signal");
+
+const heatCanvas   = document.getElementById("heatmap");
+
+const deformCanvas = document.getElementById("deform");
+
+  
+
+let showSignal = true;
+
+  
+
+// ============================
+
+// UI
+
+// ============================
+
+document.getElementById("toggle").onclick = () => {
+
+  showSignal = !showSignal;
+
+  drawAll();
+
+};
+
+  
+
+// ============================
+
+// Générateur gaussien
+
+// ============================
+
+function randn(){
+
+  let u = Math.random() || 1e-10;
+
+  let v = Math.random();
+
+  return Math.sqrt(-2Math.log(u)) * Math.cos(2Math.PIv);
+
+}
+
+  
+
+// ============================
+
+// Signal synthétique
+
+// ============================
+
+function buildSignal(){
+
+  const noise = parseFloat(noiseInput.value);
+
+  const trans = parseInt(transInput.value);
+
+  const n = 256;
+
+  
+
+  let arr = [];
+
+  
+
+  for(let i=0;i<n;i++){
+
+    let t = i * 4 * Math.PI / n;
+
+    let y = Math.sin(t);
+
+  
+
+    if(i > trans) y += 0.8Math.sin(6t);
+
+    y += noise * randn();
+
+  
+
+    arr.push(y);
+
+  }
+
+  
+
+  return arr;
+
+}
+
+  
+
+// ============================
+
+// Compression d’échelle
+
+// ============================
+
+function C(arr){
+
+  let out=[];
+
+  for(let i=0;i<arr.length-1;i+=2){
+
+    out.push((arr[i] + arr[i+1]) / 2);
+
+  }
+
+  return out;
+
+}
+
+  
+
+// ============================
+
+// Corrélation
+
+// ============================
+
+function corr(a,b){
+
+  const n = Math.min(a.length, b.length);
+
+  
+
+  let ma = a.reduce((s,v)=>s+v,0)/n;
+
+  let mb = b.reduce((s,v)=>s+v,0)/n;
+
+  
+
+  let num=0, da=0, db=0;
+
+  
+
+  for(let i=0;i<n;i++){
+
+    let xa = a[i] - ma;
+
+    let xb = b[i] - mb;
+
+  
+
+    num += xa * xb;
+
+    da  += xa * xa;
+
+    db  += xb * xb;
+
+  }
+
+  
+
+  return num / Math.sqrt((da||1)(db||1));
+
+}
+
+  
+
+// ============================
+
+// Matrice multi-échelle T
+
+// ============================
+
+function buildT(segment){
+
+  let levels = [segment];
+
+  
+
+  for(let i=0;i<3;i++){
+
+    levels.push(C(levels[levels.length-1]));
+
+  }
+
+  
+
+  let T = [];
+
+  
+
+  for(let i=0;i<4;i++){
+
+    T[i]=[];
+
+    for(let j=0;j<4;j++){
+
+      T[i][j] = corr(levels[i], levels[j]);
+
+    }
+
+  }
+
+  
+
+  return T;
+
+}
+
+  
+
+// ============================
+
+// Dessin signal
+
+// ============================
+
+function drawSignal(data){
+
+  const ctx = setupCanvas(signalCanvas);
+
+  
+
+  ctx.clearRect(0,0,700,180);
+
+  
+
+  if(!showSignal) return;
+
+  
+
+  ctx.beginPath();
+
+  
+
+  data.forEach((v,i)=>{
+
+    let x = i * 700 / data.length;
+
+    let y = 90 - v50;
+
+  
+
+    if(i===0) ctx.moveTo(x,y);
+
+    else ctx.lineTo(x,y);
+
+  });
+
+  
+
+  ctx.stroke();
+
+}
+
+  
+
+// ============================
+
+// Heatmap
+
+// ============================
+
+function drawHeat(T){
+
+  const ctx = setupCanvas(heatCanvas);
+
+  ctx.clearRect(0,0,300,300);
+
+  
+
+  const s = 75;
+
+  
+
+  for(let i=0;i<4;i++){
+
+    for(let j=0;j<4;j++){
+
+      let v = (T[i][j]+1)/2;
+
+      let g = Math.floor(v255);
+
+  
+
+      ctx.fillStyle = rgb(${g},${g},${g});
+
+      ctx.fillRect(js, is, s, s);
+
+    }
+
+  }
+
+}
+
+  
+
+// ============================
+
+// Déformation + phase
+
+// ============================
+
+function computeDeformation(signal){
+
+  
+
+  const win = 64;
+
+  let Ts = [];
+
+  
+
+  // Construction des matrices
+
+  for(let i=0;i<signal.length - win;i++){
+
+    Ts.push(buildT(signal.slice(i,i+win)));
+
+  }
+
+  
+
+  let D = [];
+
+  
+
+  // Variation entre matrices
+
+  for(let k=0;k<Ts.length-1;k++){
+
+    let sum = 0;
+
+  
+
+    for(let i=0;i<4;i++){
+
+      for(let j=0;j<4;j++){
+
+        let d = Ts[k+1][i][j] - Ts[k][i][j];
+
+        sum += dd;
+
+      }
+
+    }
+
+  
+
+    D.push(Math.sqrt(sum));
+
+  }
+
+  
+
+  return {Ts,D};
+
+}
+
+  
+
+// ============================
+
+// Dessin déformation + phase
+
+// ============================
+
+function drawDeform(signal){
+
+  
+
+  const {Ts, D} = computeDeformation(signal);
+
+  const ctx = setupCanvas(deformCanvas);
+
+  
+
+  ctx.clearRect(0,0,700,180);
+
+  
+
+  // ======================
+
+  // Courbe déformation
+
+  // ======================
+
+  let max = Math.max(...D,1);
+
+  
+
+  ctx.beginPath();
+
+  
+
+  D.forEach((v,i)=>{
+
+    let x = i * 700 / D.length;
+
+    let y = 170 - (v/max)150;
+
+  
+
+    if(i===0) ctx.moveTo(x,y);
+
+    else ctx.lineTo(x,y);
+
+  });
+
+  
+
+  ctx.strokeStyle = "#000";
+
+  ctx.stroke();
+
+  
+
+  // ======================
+
+  // Phase (H, Neff)
+
+  // ======================
+
+  let phase = [];
+
+  
+
+  Ts.forEach(T=>{
+
+    let eig = T.flat().map(Math.abs);
+
+    let sum = eig.reduce((a,b)=>a+b,0);
+
+  
+
+    let p = eig.map(v=>v/sum);
+
+  
+
+    let H = -p.reduce((s,v)=> s + (v>0 ? vMath.log(v):0), 0);
+
+    let Neff = (sumsum) / eig.reduce((a,b)=>a+bb,0);
+
+  
+
+    phase.push({H, Neff});
+
+  });
+
+  
+
+  // fond
+
+  ctx.fillStyle = "rgba(0,0,0,0.03)";
+
+  ctx.fillRect(0,0,700,180);
+
+  
+
+  // trajectoire
+
+  ctx.beginPath();
+
+  
+
+  phase.forEach((p,i)=>{
+
+    let x = 50 + p.Neff * 40;
+
+    let y = 150 - p.H * 80;
+
+  
+
+    if(i===0) ctx.moveTo(x,y);
+
+    else ctx.lineTo(x,y);
+
+  });
+
+  
+
+  ctx.strokeStyle = "#00aaff";
+
+  ctx.stroke();
+
+  
+
+  // points
+
+  phase.forEach((p,i)=>{
+
+    let x = 50 + p.Neff * 40;
+
+    let y = 150 - p.H * 80;
+
+  
+
+    ctx.fillStyle = (i===phase.length-1) ? "red" : "white";
+
+    ctx.fillRect(x,y,2,2);
+
+  });
+
+  
+
+  // ======================
+
+  // Metrics UI
+
+  // ======================
+
+  let avgD = D.reduce((a,b)=>a+b,0)/D.length;
+
+  let peaks = D.filter(v=>v>avgD1.5).length;
+
+  
+
+  document.getElementById("info").innerHTML =
+
+    Déformation moyenne: ${avgD.toFixed(3)} | Pics: ${peaks};
+
+  
+
+  let avgNeff = phase.reduce((s,p)=>s+p.Neff,0)/phase.length;
+
+  let avgH = phase.reduce((s,p)=>s+p.H,0)/phase.length;
+
+  
+
+  document.getElementById("metrics").innerHTML =
+
+    Neff̄=${avgNeff.toFixed(2)} | H̄=${avgH.toFixed(2)};
+
+  
+
+  let last = phase[phase.length-1];
+
+  
+
+  document.getElementById("intuition").innerHTML =
+
+    Structure: ${
+
+      last.Neff < 1.5 ? "simple" :
+
+      last.Neff < 3 ? "intermédiaire" : "complexe"
+
+    } | dynamique ${ last.H < 0.5 ? "stable":"chaotique" };
+
+}
+
+  
+
+// ============================
+
+// Master draw
+
+// ============================
+
+const noiseInput = document.getElementById("noise");
+
+const transInput = document.getElementById("transition");
+
+  
+
+function drawAll(){
+
+  const signal = buildSignal();
+
+  
+
+  drawSignal(signal);
+
+  drawHeat(buildT(signal.slice(0,64)));
+
+  drawDeform(signal);
+
+}
+
+  
+
+// ============================
+
+// Events
+
+// ============================
+
+noiseInput.oninput = drawAll;
+
+transInput.oninput = drawAll;
+
+  
+
+// Initial render
+
+drawAll();
+
+  
+
+</script>
+
+  
+
+</body>
+
+</html>
