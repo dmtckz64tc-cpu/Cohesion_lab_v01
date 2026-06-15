@@ -1,0 +1,27 @@
+# === Obsidian (local / inutile à versionner) ===
+.obsidian/workspace.json
+.obsidian/cache/
+.obsidian/workspaces.json
+
+# Plugins (optionnel)
+# 👉 commente si tu veux partager ta config/plugins
+.obsidian/plugins/
+
+# Thèmes (optionnel)
+.obsidian/themes/
+
+# === iOS / macOS ===
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Fichiers temporaires iOS
+.icloud
+
+# === Logs / temporaires ===
+.log
+.tmp
+.swp
+
+# === Fichiers système ===
+Thumbs.db
