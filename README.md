@@ -1,15 +1,5 @@
 # Cohesion_lab_v01
 
-# 
-
-:::::::::::::: Φ ::::::::::::::
-   mapping signals into structure
-   from noise to order to zeta
-:::::::::::::::::::::::::::::::
-
-
-
-
 ## Notes sur la construction d'un espace géométrique de signaux
 
 ### Introduction
