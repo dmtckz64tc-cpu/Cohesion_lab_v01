@@ -371,7 +371,12 @@ Hypothèse :
 Autrement dit :
 deux signaux sont proches dans Φ non parce qu'ils se ressemblent,
 mais parce qu'ils réagissent de manière similaire aux perturbations.
+#2
+J'ajouterais une note dans la marge du timoscope :
+Version actuelle de l'hypothèse :
 
+Version actuelle de l'hypothèse :
+l'instrument ne classe pas les signaux ; il mesure leur distance à une famille de structures exceptionnellement stables
 
 
 # ci dessous rapport de gemini copilot
