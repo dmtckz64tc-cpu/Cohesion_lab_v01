@@ -1,5 +1,12 @@
 # Cohesion_lab_v01
 
+┌───────────────────────────────────────────┐
+│                TIMOSCOPE Φ                │
+│      Exploring the Geometry of Signals    │
+└───────────────────────────────────────────┘
+
+
+
 ## Notes sur la construction d'un espace géométrique de signaux
 
 ### Introduction
