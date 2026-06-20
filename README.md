@@ -10,8 +10,6 @@
 
 
 
-# Timoscope Φ
-
 ## Notes sur la construction d'un espace géométrique de signaux
 
 ### Introduction
@@ -359,3 +357,4 @@ Le paysage reste largement inexploré.
 Mais il existe.
 
 Et c'est déjà beaucoup.
+#GPT free 20062026
