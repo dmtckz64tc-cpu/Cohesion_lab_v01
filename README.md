@@ -197,6 +197,7 @@ La leçon est simple :
 
 la géométrie doit être découverte avant d'être nommée.
 
+
 ## Surinterprétation locale
 
 Certaines structures visibles dans de petits ensembles disparaissaient dès que davantage de données étaient ajoutées.
@@ -360,6 +361,20 @@ Oui. Voici le **saut théorique complet** vers une version discrète de type Ein
 
 Je vais faire une chose importante d’emblée : sur une grille 2D, l’analogue direct des équations d’Einstein n’est pas littéralement le même objet qu’en relativité générale 4D, parce qu’en 2D le tenseur d’Einstein est trivial. La bonne manière de faire est donc de passer par une **métrique conforme discrète** et d’écrire une **équation de courbure scalaire** induite par la mémoire. C’est le bon équivalent discret, et c’est mathématiquement robuste.
 
+##demande de rajout ddmmyyyy 171
+
+Alors voici la note de bas de page que j'ajouterais à votre notice.
+Note A — Ce que mesure peut-être réellement Φ
+Hypothèse :
+Φ ne représente pas les signaux.
+Φ représente les contraintes qui gouvernent leurs transformations.
+Autrement dit :
+deux signaux sont proches dans Φ non parce qu'ils se ressemblent,
+mais parce qu'ils réagissent de manière similaire aux perturbations.
+
+
+
+# ci dessous rapport de gemini copilot
 ---
 
 # 1. Variables fondamentales
