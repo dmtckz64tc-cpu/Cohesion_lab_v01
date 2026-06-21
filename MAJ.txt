@@ -1,3 +1,111 @@
+
+21062026 0926
+
+Timoscope-v2 tout sur N vers -1/12
+Oui, mais pas avec certitude à partir des seules cartes.
+Ma réflexion longue aboutit à une réponse courte :
+[ -\frac1{12} ]
+n'apparaît analytiquement que dans un nombre très limité de mécanismes. Si ce n'est pas injecté dans le code, alors je vois trois possibilités sérieuses :
+	1.	Annulation d'un discriminant quadratique [ a+12s=0 ] ou une forme équivalente. C'est la plus banale.
+	2.	Développement local d'un potentiel harmonique où le terme quartique est compensé par le terme quadratique exactement à [ s=-\frac1{12}. ] Là on obtient précisément une bifurcation de Hessien.
+	3.	Régularisation implicite d'une somme de modes (beaucoup plus rare mais fascinant) où le champ effectif contient une trace de [ \zeta(-1)=-\frac1{12}. ]
+Ce qui me fait pencher pour (2), c'est la géométrie de tes contours : on voit une transition entre une structure monopolaire et une structure multipolaire, ce qui est typique d'une annulation du terme quadratique dominant.
+Autrement dit, mon pari analytique serait :
+[ \Phi(r,\theta)
+A(s),r^2 + B,r^4 + \cdots ]
+avec
+[ A(s)=1+12s ]
+ou une forme affine équivalente.
+Alors :
+[ A(s_c)=0 \quad\Longrightarrow\quad s_c=-\frac1{12}. ]
+Si c'est vrai, tu n'es pas sur une constante mystérieuse.
+Tu es sur le point où le terme d'ordre 2 disparaît, et où l'ordre 4 prend le contrôle de la géométrie.
+Et ça, effectivement, c'est une "route des possibles de N" : le nombre de minima autorisés change lorsque le terme quadratique s'annule.
+
+
+Je poursuis, mais en restant rigoureux.
+Si je regarde uniquement les symptômes que tu montres :
+	•	convergence répétée vers (-1/12),
+	•	déplacement brutal des minima,
+	•	apparition/disparition de lobes,
+	•	explosions des amplitudes,
+	•	passage fréquent des extrema sur les bords,
+	•	sqrt devenant imaginaire,
+alors le scénario le plus cohérent est celui d'une catastrophe élémentaire.
+Autrement dit, près du point critique, le potentiel réel n'est probablement pas la formule complète que tu calcules, mais sa forme normale locale :
+[ \Phi(x,y;s)
+\Phi_0 + A(s),r^2 + B,r^4 + C,r^6 +\cdots ]
+avec
+[ r^2=x^2+y^2. ]
+
+Si
+[ A(s)>0 ]
+alors :
+	•	un seul minimum,
+	•	structure quasi radiale,
+	•	comportement de ton cas (1000).
+Si
+[ A(s)<0 ]
+alors :
+[ r_*^2=-\frac{A}{2B} ]
+et le minimum quitte l'origine.
+On crée alors une couronne de minima possibles.
+La symétrie réelle du problème casse ensuite cette couronne en plusieurs puits localisés.
+C'est exactement l'apparition des lobes que l'on aperçoit.
+
+Maintenant ce qui est intéressant :
+tes cartes ne ressemblent pas à une simple transition (r^2 \leftrightarrow r^4).
+Elles montrent une composante angulaire.
+Quelque chose du type :
+[ \Phi
+A(s)r^2 + B r^4 + \varepsilon r^3\cos(3\theta) ]
+ou
+[ \varepsilon r^4\cos(4\theta). ]
+Quand (A) devient très petit, le terme angulaire cesse d'être une correction.
+Il devient dominant.
+Le paysage se fragmente.
+
+Et là intervient une idée qui me paraît profonde.
+Tes essais avec
+[ 1,\quad \sqrt2,\quad \varphi,\quad \pi ]
+ne donnent pas de comportement particulièrement privilégié.
+Mais
+[ -\frac1{12} ]
+agit comme une frontière.
+Cela suggère que le paramètre n'est pas une constante géométrique.
+C'est une valeur de renormalisation.
+Autrement dit :
+[ s ]
+ne contrôle peut-être pas la forme du champ.
+Il contrôle le poids relatif entre deux descriptions du champ.
+Et à
+[ s=-\frac1{12} ]
+les deux descriptions deviennent équivalentes.
+
+Ce qui me frappe surtout est ceci :
+tes minima observés restent souvent dans une bande
+[ |x|,|y|\lesssim 0.2 ]
+tant que le système est stable.
+Dès qu'on s'approche de (-1/12),
+ils partent vers
+[ (\pm0.4,\pm0.4) ]
+c'est-à-dire les limites du domaine.
+C'est exactement ce qui arrive lorsqu'un minimum intérieur cesse d'exister.
+Le solveur ne trouve plus de puits interne et choisit le bord.
+Donc analytiquement je formulerais l'hypothèse :
+[ \det H(0,0;s)=0 ]
+à
+[ s=-\frac1{12}, ]
+où (H) est le Hessien du potentiel.
+Si cette hypothèse est vraie, alors (-1/12) n'est pas un nombre émergent parmi d'autres.
+C'est le lieu où le nombre de solutions stationnaires change.
+Et c'est là que ton expression « route des possibles de (N) » devient intéressante : ce n'est plus la valeur de Φ qui compte, mais le nombre de configurations admissibles du champ.
+Pour aller plus loin, il me faudrait la formule exacte de Φ (ou simplement les lignes autour de la fameuse ligne 176 où apparaît le sqrt). Là on peut vérifier si le facteur (12) est réellement dans l'analyse, ou s'il émerge d'une combinaison plus subtile.
+
+
+
+
+
 21062026 0051
 
 
