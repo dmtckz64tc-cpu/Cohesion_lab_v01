@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Phi Field</title>
+
+<style>
+body {
+    background: #111;
+    color: white;
+    font-family: sans-serif;
+    text-align: center;
+}
+
+canvas {
+    border: 1px solid #333;
+}
+
+#controls {
+    margin: 10px;
+}
+</style>
+</head>
+
+<body>
+
+<h2>Φ Field Explorer</h2>
+
+<div id="controls">
+    smooth: <input type="range" id="smooth" min="-2" max="1" step="0.1" value="-1">
+    <span id="val">-1</span>
+</div>
+
+<canvas id="canvas" width="500" height="500"></canvas>
+
+<script>
+
+// ============================
+// FAKE DATA (à remplacer plus tard)
+// ============================
+
+let points = [];
+
+// simule tes centres Φ + CV
+for (let i = 0; i < 30; i++) {
+    let x = (Math.random() - 0.5) * 0.6;
+    let y = (Math.random() - 0.5) * 0.6;
+
+    // simulate landscape
+    let r = Math.sqrt(xx + yy);
+    let z = 0.03 + r * 3 + Math.random()0.2;
+
+    points.push({x, y, z});
+}
+
+// ============================
+// CANVAS
+// ============================
+
+let canvas = document.getElementById("canvas");
+let ctx = canvas.getContext("2d");
+
+let W = canvas.width;
+let H = canvas.height;
+
+// ============================
+// SCALE
+// ============================
+
+function mapX(x){
+    return (x + 0.4) / 0.8 * W;
+}
+function mapY(y){
+    return (y + 0.4) / 0.8 * H;
+}
+
+// ============================
+// RENDER FIELD
+// ============================
+
+function render() {
+
+    let smooth = Math.pow(10, parseFloat(slider.value)); // log scale
+
+    ctx.clearRect(0,0,W,H);
+
+    let step = 4;
+
+    for (let i=0; i<W; i+=step) {
+        for (let j=0; j<H; j+=step) {
+
+            let x = i/W * 0.8 - 0.4;
+            let y = j/H * 0.8 - 0.4;
+
+            let z = 0;
+
+            // kernel approx (RBF simple)
+            for (let p of points) {
+
+                let dx = x - p.x;
+                let dy = y - p.y;
+                let d2 = dxdx + dydy;
+
+                z += p.z * Math.exp(-d2 / smooth);
+            }
+
+            // color
+            let c = Math.min(255, z * 80);
+
+            ctx.fillStyle = rgb(${c},${c*0.5},0);
+            ctx.fillRect(i, j, step, step);
+        }
+    }
+
+    // draw points
+    for (let p of points) {
+        ctx.fillStyle = "white";
+        ctx.beginPath();
+        ctx.arc(mapX(p.x), mapY(p.y), 3, 0, Math.PI2);
+        ctx.fill();
+    }
+}
+
+// ============================
+// UI
+// ============================
+
+let slider = document.getElementById("smooth");
+let val = document.getElementById("val");
+
+slider.oninput = () => {
+    val.innerText = slider.value;
+    render();
+};
+
+// initial
+render();
+
+</script>
+
+</body>
+</html>
