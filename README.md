@@ -1,3 +1,8 @@
+
+https://chatgpt.com/share/6a80af26-1d44-83ed-b607-6c4d71c28083
+Poser au pied de l’arbre TT’sT
+le15082026
+
 # Cohesion_lab_v01
 
 ┌───────────────────────────────────────────┐
