@@ -1,5 +1,5 @@
-https://chatgpt.com/share/6a80f454-0a18-83ed-843d-d4b2462c62a1
-https://chatgpt.com/share/6a80af26-1d44-83ed-b607-6c4d71c28083
+DISCUSSION d'EN TETE en COURS
+https://chatgpt.com/share/6a81eef8-1eac-83eb-9357-10a30be1c6ed
 Poser au pied de l’arbre TT’sT
 le15082026
 
