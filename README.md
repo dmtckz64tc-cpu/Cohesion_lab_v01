@@ -1,7 +1,4 @@
-DISCUSSION d'EN TETE en COURS
-https://chatgpt.com/share/6a81eef8-1eac-83eb-9357-10a30be1c6ed
-Poser au pied de l’arbre TT’sT
-le15082026
+
 
 # Cohesion_lab_v01
 
